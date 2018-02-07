@@ -1,0 +1,3 @@
+[submodule "ResearchTools"]
+	path = ResearchTools
+	url = https://github.com/coallaoh/ResearchTools.git
