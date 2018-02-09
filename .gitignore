@@ -1,0 +1,6 @@
+syntax:glob
+
+.idea/
+data/
+cache/
+*.pyc
