@@ -10,7 +10,7 @@ Many deployed learned models are black boxes: given input, returns output. Inter
 
 ## Environment
 
-We only support python 2 for this project. Conda environment with pytorch (with cuda 8.0) has been used. 
+We only support python 2 for this project. Conda environment with [pytorch](http://pytorch.org/) (with cuda 8.0) has been used. 
 
 ## Installation
 
@@ -40,5 +40,17 @@ $ ./run.py
 ```
 will (1) generate the *MNIST-NET* dataset and (2) train and evaluate various metamodels (kennen variants - see paper) on the *MNIST-NET*. Read `run.py` in detail for more information on configuration etc.
 
+## Contact
 
+For any problem with implementation or bug, please contact [Seong Joon Oh](https://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal-computing/people/seong-joon-oh/) (joon at mpi-inf dot mpg dot de).
 
+## Citation
+
+```
+  @article{joon18iclr,
+    title = {Whitening Black-Box Neural Networks},
+    author = {Oh, Seong Joon and Augustin, Max and Schiele, Bernt and Fritz, Mario},
+    year = {2018},
+    journal = {International Conference on Learning Representations},
+  }
+```
