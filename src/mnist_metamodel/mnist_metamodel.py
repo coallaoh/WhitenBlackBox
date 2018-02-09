@@ -12,8 +12,8 @@ from imports.basic_modules import *
 from imports.ResearchTools import *
 from imports.pytorch_imports import *
 
-from mnist import mnist_data_transform, load_model
-from mnist import config as mnist_config
+from mnist_nets.mnist import mnist_data_transform, load_model
+from mnist_nets.mnist import config as mnist_config
 from lib_pytorch.basetool import ListDataset, TrainCurve
 
 
