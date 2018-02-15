@@ -39,9 +39,9 @@ They share similarities to adversarial examples to neural networks ([Explaining 
 
 Our final metamodel - `kennen-io` - combines `kennen-o` and `kennen-i`. 
 
-### More in paper!
+### More in the ICLR paper!
 
-The ICLR paper contains much more detailed experimental results MNIST, including the prediction of 12 diverse model attributes, as well as extrapolation setups where the training models are significantly different from the test black-box model. You will also find results on generating adversarial examples against black-box ImageNet classifiers with the reverse-engineered information.
+The ICLR paper contains much more detailed experimental results on MNIST, including the prediction of 12 diverse model attributes, as well as extrapolation setups where the test black-box model is significantly different from the training models. We also show results on attacking black-box ImageNet classifiers with adversarial examples generated using the reverse-engineered information.
 
 ## Environment
 
