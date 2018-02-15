@@ -14,22 +14,26 @@ We extract diverse types of information from a black-box neural network (which w
 
 ### kennen-o
 
+<p align="center">
 <img align="middle" src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/meta-arch-or.png" width="500" >
+</p>
 
 The simplest one - `kennen-o` - selects the query inputs at random from a dataset. An MLP classifier is trained over the outputs with respect to the selected inputs to predict network attributes. See the figure above.
 
 ### kennen-i
 
+<p align="center">
 <img align="middle" src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/meta-arch-ic.png" width="500" >
+</p>
 
 Our second approach - `kennen-i` - approaches the problem from a completely different point of view. For the sake of clarity, we take an MNIST digit classifier as an example. Over multiple white-box models (training set models), we craft an _input_ that is designed to expose inner secrets of the training set models. This crafted input turns out to generalise very well to unseen black-box models, in the sense that it also reveals the secrets of the unseen black box. More specifically, using gradient signals from a diverse set of white box models, we design a query input that forces an MNIST digit classifier to predict `0` if the classifier has the attribute A, and `1` if it doesn't. In other words, the crafted input _re-purposes_ a digit classifier into a model attribute classifier. See the figure above for the training procedure. We also show below some learned query inputs which are designed to induce the prediction of label `0` if the victim black box has a max-pooling layer, train-time dropout layer, and kernel size 3, respectively, and `1` for the other attributes.
 
 || Max-Pooling, yes or no? | Dropout, yes or no? | Kernel Size, 3 or 5?  |
 | --- | :---: | :---: | :---: |
 |Crafted input| <img src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/pool.jpg" width="100">  | <img src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/drop.jpg" width="100"> | <img src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/ks.jpg" width="100"> |
-|Accuracy over test black boxes| 94.8% | 77.0% | 88.5% |
+|Accuracy over <br> test black boxes| 94.8% | 77.0% | 88.5% |
 
-They share similarities to adversarial examples to neural networks ([Explaining and Harnessing Adversarial Examples](https://arxiv.org/abs/1412.6572)) that are also designed to alter the behaviour a neural network. The only difference is the goal. The goal of adversarial examples is to induce a specific output (wrong output, specific prediction for some malicious purpose, etc.). The goal of the `kennen-i` inputs is to _expose_ the model attributes. They both seem to generalise well to unseen models ([Delving into Transferable Adversarial Examples and Black-Box Attacks](https://arxiv.org/abs/1611.02770)), enabling attacks on black boxes. 
+They share similarities to adversarial examples to neural networks ([Explaining and Harnessing Adversarial Examples](https://arxiv.org/abs/1412.6572)) that are also designed to alter the behaviour a neural network. The only difference is the goal. The goal of adversarial examples is to induce a specific output (e.g. wrong output, specific prediction for malicious purpose). The goal of the `kennen-i` inputs is to _expose_ the model attributes. They both seem to generalise well to unseen models, enabling attacks on black boxes. (See [Delving into Transferable Adversarial Examples and Black-Box Attacks](https://arxiv.org/abs/1611.02770) for transferability of adversarial examples.)
 
 ### kennen-io
 
