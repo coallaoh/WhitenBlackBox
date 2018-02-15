@@ -33,11 +33,15 @@ Our second approach - `kennen-i` - approaches the problem from a completely diff
 |Crafted input| <img src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/pool.jpg" width="100">  | <img src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/drop.jpg" width="100"> | <img src="http://datasets.d2.mpi-inf.mpg.de/joon18iclr/ks.jpg" width="100"> |
 |Reverse-engineering <br> success rate <br> (random chance)| 94.8% <br> (50%) | 77.0% <br> (50%) | 88.5% <br> (50%) |
 
-They share similarities to adversarial examples to neural networks ([Explaining and Harnessing Adversarial Examples](https://arxiv.org/abs/1412.6572)) that are also designed to alter the behaviour a neural network. The only difference is the goal. The goal of adversarial examples is to induce a specific output (e.g. wrong output, specific prediction for malicious purpose). The goal of the `kennen-i` inputs is to _expose_ the model attributes. They both seem to generalise well to unseen models, enabling attacks on black boxes. (See [Delving into Transferable Adversarial Examples and Black-Box Attacks](https://arxiv.org/abs/1611.02770) for transferability of adversarial examples.)
+They share similarities to adversarial examples to neural networks ([Explaining and Harnessing Adversarial Examples](https://arxiv.org/abs/1412.6572)) that are also designed to alter the behaviour a neural network. The only difference is the goal. The goal of adversarial examples is to induce a specific output (e.g. wrong output, specific prediction for malicious purpose). The goal of the `kennen-i` inputs is to _expose_ the model attributes. They both seem to generalise well to unseen models, enabling attacks on black boxes. (See [Delving into Transferable Adversarial Examples and Black-Box Attacks](https://arxiv.org/abs/1611.02770) for the transferability of adversarial examples.)
 
 ### kennen-io
 
-Our final metamodel - `kennen-io` - combines `kennen-o` and `kennen-i`. For detailed experimental results on MNIST and ImageNet classifiers, see the paper!
+Our final metamodel - `kennen-io` - combines `kennen-o` and `kennen-i`. 
+
+### More in paper!
+
+The ICLR paper contains much more detailed experimental results MNIST, including the prediction of 12 diverse model attributes, as well as extrapolation setups where the training models are significantly different from the test black-box model. You will also find results on generating adversarial examples against black-box ImageNet classifiers with the reverse-engineered information.
 
 ## Environment
 
