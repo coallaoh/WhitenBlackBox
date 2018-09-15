@@ -77,7 +77,7 @@ will (1) generate the *MNIST-NET* dataset and (2) train and evaluate various met
 
 ## Contact
 
-For any problem with implementation or bug, please contact [Seong Joon Oh](https://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal-computing/people/seong-joon-oh/) (joon at mpi-inf dot mpg dot de).
+For any problem with implementation or bug, please contact [Seong Joon Oh](https://seongjoonoh.com/) (coallaoh at gmail).
 
 ## Citation
 
