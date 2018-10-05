@@ -19,7 +19,7 @@ def load_conf_control_models(archset):
         overridecache_output=True,
         test_batch_size=1000,
         log_interval=100,
-        gpu=0,
+        gpu=None,
     )
 
     nmodel = int(archset[4:])

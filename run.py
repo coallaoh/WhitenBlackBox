@@ -35,6 +35,7 @@ if example_no == 1:
     SPLIT = 'rand'
     SPLIT_TR = [1]  # Train on split 1
     SPLIT_TE = [0]  # Test on split 0
+    GPU = None  # No GPU
 elif example_no == 2:
     # kennen-i approach with 3000 training models
     # under the Extrapolation (E) split, with splitting attribute {#conv}.
@@ -48,6 +49,7 @@ elif example_no == 2:
     # see the bottom of this script.
     SPLIT_TR = [0, 1]  # Train on splits 0 and 1 (corresponds to #conv=2 or 3 - see bottom of page)
     SPLIT_TE = [2]  # Test on split 2 (corresponds to #conv=4)
+    GPU = 1  # GPU ID
 elif example_no == 3:
     # kennen-io approach with 100 training models and 100 queries with score outputs
     # under the Extrapolation (E) split, with splitting attribute {#conv,#fc}.
@@ -59,6 +61,7 @@ elif example_no == 3:
     SPLIT = 'ex^net/n_conv^net/n_fc'  # Possible to set multiple splitting attributes separated via '^'
     SPLIT_TR = [0, 1]  # Train on #conv=#fc=2 or 3
     SPLIT_TE = [2]  # Test on #conf=#fc=4
+    GPU = 0  # GPU ID
 
 co = config_metamodel(
     control=dict(
@@ -112,7 +115,7 @@ co = config_metamodel(
         save=False,
         overridecache=True,
         mode='train',
-        gpu=0,
+        gpu=GPU,
     )
 )
 with co:

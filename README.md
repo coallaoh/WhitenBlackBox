@@ -45,7 +45,7 @@ The ICLR paper contains much more detailed experimental results on MNIST, includ
 
 ## Environment
 
-We only support python 2 for this project. Conda environment with [pytorch](http://pytorch.org/) (with cuda 8.0) has been used. 
+We only support python 2 for this project. Conda environment with [pytorch](http://pytorch.org/) (with cuda 8.0) has been used. Tested on pytorch version 0.4.1. 
 
 ## Installation
 

@@ -47,7 +47,8 @@ def config(control, conf, called=False):
 
     if not called:
         torch.manual_seed(co.control['seed'])
-        torch.cuda.set_device(co.conf['gpu'])
+        if co.conf['gpu'] is not None:
+            torch.cuda.set_device(co.conf['gpu'])
         torch.cuda.manual_seed(co.control['seed'])
 
         if osp.isfile(co.conf['loc']['finalmodel']):
@@ -67,7 +68,7 @@ def mnist_data_transform(data, direction='forward'):
     elif direction == 'backward':
         return data * 0.3081 + 0.1307
     else:
-        raise NotImplementedError
+        raise ValueError('Data transformation direction is either forward or backward.')
 
 
 class return_act(nn.Module):
@@ -82,7 +83,7 @@ class return_act(nn.Module):
         elif act == 'tanh':
             self.actfunc = nn.Tanh()
         else:
-            raise NotImplementedError
+            raise ValueError('Activation type should be one of {relu, elu, prelu, tanh}.')
 
     def forward(self, x):
         return self.actfunc(x)
@@ -92,7 +93,7 @@ def return_drop(drop):
     if drop == 'normal':
         dropfunc = F.dropout
     else:
-        raise NotImplementedError
+        raise ValueError('Dropout type must be "normal".')
     return dropfunc
 
 
@@ -184,14 +185,16 @@ class nin(nn.Module):
         return F.log_softmax(x)
 
 
-def load_model(control):
+def load_model(control, gpu=True):
     if control['net']['name'] == 'mnet':
         model = mnet(control)
     elif control['net']['name'] == 'nin':
         model = nin(control)
     else:
-        raise Exception(NotImplementedError)
-    model.cuda()
+        raise ValueError('Network name should be mnet.')
+
+    if gpu is not None:
+        model.cuda()
 
     return model
 
@@ -215,7 +218,7 @@ def collect_sampler(subset, original_seed):
         np.random.shuffle(sampler)
         sampler = sampler[_t * 15000:(_t + 1) * 15000]
     else:
-        raise NotImplementedError
+        raise ValueError('Subset should be one of {all, half_#, quarter_#}.')
 
     np.random.seed(original_seed)
     return sampler.tolist()
@@ -240,7 +243,7 @@ def train(co):
         ])),
         batch_size=co.control['opt']['batch_size'], shuffle=True, **kwargs)
 
-    model = load_model(co.control)
+    model = load_model(co.control, gpu=co.conf['gpu'])
     if co.control['opt']['optimiser'] == 'SGD':
         optimizer = optim.SGD(model.parameters(), lr=co.control['opt']['lr'], momentum=co.control['opt']['momentum'])
     elif co.control['opt']['optimiser'] == 'ADAM':
@@ -249,12 +252,13 @@ def train(co):
         optimizer = optim.RMSprop(model.parameters(), lr=co.control['opt']['lr'],
                                   momentum=co.control['opt']['momentum'])
     else:
-        raise NotImplementedError
+        raise ValueError('Optimiser should be one of {SGD, ADAM, RMSprop}.')
 
     def train(epoch):
         model.train()
         for batch_idx, (data, target) in enumerate(train_loader):
-            data, target = data.cuda(), target.cuda()
+            if co.conf['gpu'] is not None:
+                data, target = data.cuda(), target.cuda()
             data, target = Variable(data), Variable(target)
             optimizer.zero_grad()
             output = model(data)
@@ -271,7 +275,8 @@ def train(co):
         test_loss = 0
         correct = 0
         for data, target in test_loader:
-            data, target = data.cuda(), target.cuda()
+            if co.conf['gpu'] is not None:
+                data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
             output = model(data)
             test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss

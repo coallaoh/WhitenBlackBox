@@ -89,7 +89,8 @@ def config(control, conf):
         assert (co.control['setup']['qseed'] == 0)
 
     set_seed(co.control['seed'])
-    torch.cuda.set_device(conf['gpu'])
+    if conf['gpu'] is not None:
+        torch.cuda.set_device(conf['gpu'])
 
     co.conf['attributes'] = dict(
         net=dict(
@@ -124,12 +125,13 @@ def config(control, conf):
 
 
 class mlp(nn.Module):
-    def __init__(self, netname, nquery, queryoutdim, target):
+    def __init__(self, netname, nquery, queryoutdim, target, gpu=True):
         super(mlp, self).__init__()
         _, self.nlayer, self.hiddendim = netname.split('_')
         self.nlayer = int(self.nlayer)
         self.hiddendim = int(self.hiddendim)
         self.target = target
+        self.gpu = gpu
 
         self.inputdim = queryoutdim * nquery
         self.act = F.relu
@@ -155,7 +157,7 @@ class mlp(nn.Module):
         elif return_type == 'embedding':
             return x
         else:
-            raise NotImplementedError
+            raise ValueError('Return_type must be one of {structured_output, cat_output, embedding}.')
 
     def _layer_generator(self, attributes):
         layers = {}
@@ -165,7 +167,8 @@ class mlp(nn.Module):
             else:
                 attr = attributes[ky]
                 layers[ky] = nn.Linear(self.hiddendim, len(attr))
-                layers[ky].cuda()
+                if self.gpu is not None:
+                    layers[ky].cuda()
         return layers
 
     def _apply_fc_layers(self, fc_final, target, x):
@@ -230,7 +233,7 @@ class inputPerturber(object):
             pert = valdata[sampler].astype(np.float32)
             qlabel = qlabel[sampler]
         else:
-            raise NotImplementedError
+            raise ValueError('Inittype must be one of {gray, white, unifnoise, randval}.')
 
         return pert, qlabel
 
@@ -343,7 +346,7 @@ class blackBoxRevealer(inputPerturber):
             self.metaoptimizer = optim.Adam(self.metanet.parameters(), lr=optoptions['lr'],
                                             weight_decay=optoptions['weight_decay'])
         else:
-            raise NotImplementedError
+            raise ValueError('Meta-optimiser should be one of {SGD, ADAM}.')
 
     def _load_metanet_model(self):
         nquery = self.co.control['setup']['nquery']
@@ -356,10 +359,13 @@ class blackBoxRevealer(inputPerturber):
                 nquery=nquery,
                 queryoutdim=queryoutdim,
                 target=self.target,
+                gpu=self.co.conf['gpu']
             )
         else:
-            raise Exception(NotImplementedError)
-        self.metanet.cuda()
+            raise ValueError('Metanet only supports mlp.')
+
+        if self.co.conf['gpu'] is not None:
+            self.metanet.cuda()
 
     def prepare_data(self, whichnet):
         split = self.co.control['setup']['split']
@@ -372,7 +378,7 @@ class blackBoxRevealer(inputPerturber):
         if traindata == 'dnet10000':
             data_cos = load_from_cache('cache/modelzoo-mnist/dnet10000_cos_pruned_ensembled.pkl')
         else:
-            raise NotImplementedError
+            raise ValueError('Meta-training only supports dnet10000.')
 
         traincos = []
         testcos = []
@@ -407,7 +413,7 @@ class blackBoxRevealer(inputPerturber):
                 if testflag:
                     testcos.append(co)
         else:
-            raise NotImplementedError
+            raise ValueError('Experimental split should be one of {rand, ex^##}.')
 
         if trainsubset != 0:
             traincos = traincos[:trainsubset]
@@ -459,7 +465,7 @@ class blackBoxRevealer(inputPerturber):
                     break
 
     def _compute_queryoutput(self, control, maindir, x):
-        model = load_model(control)
+        model = load_model(control, gpu=self.co.conf['gpu'])
         params = torch.load(osp.join(maindir, 'final.pth.tar'), map_location=lambda storage, loc: storage)
         model.load_state_dict(params['state_dict'])
         model.eval()
@@ -508,7 +514,12 @@ class blackBoxRevealer(inputPerturber):
                 ))
                 for ii in range(tl.batch_size):
                     co = cos[ii]
-                    x = Variable(torch.from_numpy(self.pert).cuda(), requires_grad=True)
+                    if self.co.conf['gpu'] is not None:
+                        pert = torch.from_numpy(self.pert).cuda()
+                    else:
+                        pert = torch.from_numpy(self.pert)
+
+                    x = Variable(pert, requires_grad=True)
                     query_output = self._compute_queryoutput_ensemble(co, x)
                     co.update_token()
                     self.query_output_fixed[phase][co.token] = query_output.data.cpu().numpy()
@@ -589,16 +600,24 @@ class blackBoxRevealer(inputPerturber):
         tar_this = self._get_target(co, target)
         target_cpu = tar_this
         if self._get_attr_recur(target, self.labelmapping) is None:
-            tar_this = Variable(torch.FloatTensor([tar_this]).cuda())
+            if self.co.conf['gpu'] is not None:
+                tar_this = Variable(torch.FloatTensor([tar_this]).cuda())
+            else:
+                tar_this = Variable(torch.FloatTensor([tar_this]))
+
             pred = metaoutput.data.cpu().numpy()[0]
             loss = F.smooth_l1_loss(metaoutput, tar_this)
         else:
-            tar_this = Variable(torch.LongTensor([tar_this]).cuda())
+            if self.co.conf['gpu'] is not None:
+                tar_this = Variable(torch.LongTensor([tar_this]).cuda())
+            else:
+                tar_this = Variable(torch.LongTensor([tar_this]))
+
             pred = metaoutput.data.cpu().numpy()[0].argmax()
             loss = F.cross_entropy(metaoutput, tar_this) / bs
 
         if return_loss:
-            return target_cpu, pred, loss
+            return target_cpu, pred, loss.view(1)
         else:
             return target_cpu, pred
 
@@ -651,7 +670,10 @@ class blackBoxRevealer(inputPerturber):
             if isinstance(target[ky], dict):
                 metaoutput[ky] = self._inputnetout_recursive(target[ky], query_output)
             else:
-                metaoutput[ky] = torch.mm(Variable(torch.eye(len(target[ky]), 10).cuda()),
+                eyemat = torch.eye(len(target[ky]), 10)
+                if self.co.conf['gpu'] is not None:
+                    eyemat = eyemat.cuda()
+                metaoutput[ky] = torch.mm(Variable(eyemat),
                                           query_output.mean(0).view(-1, 1),
                                           ).view(1, -1)
 
@@ -689,9 +711,20 @@ class blackBoxRevealer(inputPerturber):
                     elif 'onlytop' in self.co.control['setup']['outrep']:
                         topk = self.co.control['setup']['outrep'].split('-')[1]
                         query_output = self._onlytop(query_output, topk)
-                    query_output = Variable(torch.from_numpy(query_output).cuda())
+
+                    if self.co.conf['gpu'] is not None:
+                        query_output = torch.from_numpy(query_output).cuda()
+                    else:
+                        query_output = torch.from_numpy(query_output)
+
+                    query_output = Variable(query_output)
                 else:
-                    x = Variable(torch.from_numpy(self.pert).cuda(), requires_grad=True)
+                    if self.co.conf['gpu'] is not None:
+                        pert = torch.from_numpy(self.pert).cuda()
+                    else:
+                        pert = torch.from_numpy(self.pert)
+
+                    x = Variable(pert, requires_grad=True)
                     query_output = self._compute_queryoutput_ensemble(co, x)
 
                 if 'm' in self.method:
@@ -704,7 +737,7 @@ class blackBoxRevealer(inputPerturber):
                 loss = torch.cat(loss_).sum()
                 self._correct_counter_recur(batch_counter, pred, target_cpu)
 
-                batch_loss += loss.data.cpu().numpy()[0]
+                batch_loss += loss.data.cpu().numpy()
 
                 loss.backward()
                 if which == 'i':
@@ -756,9 +789,20 @@ class blackBoxRevealer(inputPerturber):
                     elif 'onlytop' in self.co.control['setup']['outrep']:
                         topk = self.co.control['setup']['outrep'].split('-')[1]
                         query_output = self._onlytop(query_output, topk)
-                    query_output = Variable(torch.from_numpy(query_output).cuda(), requires_grad=True)
+
+                    if self.co.conf['gpu'] is not None:
+                        query_output = torch.from_numpy(query_output).cuda()
+                    else:
+                        query_output = torch.from_numpy(query_output)
+
+                    query_output = Variable(query_output, requires_grad=True)
                 else:
-                    x = Variable(torch.from_numpy(self.pert).cuda(), requires_grad=True)
+                    if self.co.conf['gpu'] is not None:
+                        pert = torch.from_numpy(self.pert).cuda()
+                    else:
+                        pert = torch.from_numpy(self.pert)
+
+                    x = Variable(pert, requires_grad=True)
                     query_output = self._compute_queryoutput_ensemble(co, x)
 
                 if 'm' in self.method:
@@ -771,7 +815,7 @@ class blackBoxRevealer(inputPerturber):
                                                                  return_loss=True, loss=loss_)
                 loss = torch.cat(loss_).sum()
                 self._correct_counter_recur(counter, pred, target_cpu)
-                test_loss += loss.data.cpu().numpy()[0]
+                test_loss += loss.data.cpu().numpy()
 
                 e_t = time.time()
                 if e_t - s_t > 10:
