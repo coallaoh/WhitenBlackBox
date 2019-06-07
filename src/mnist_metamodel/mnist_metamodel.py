@@ -177,7 +177,7 @@ class mlp(nn.Module):
             if isinstance(fc_final[ky], dict):
                 x_out[ky] = self._apply_fc_layers(fc_final[ky], target[ky], x)
             else:
-                x_out[ky] = F.log_softmax(fc_final[ky](x))
+                x_out[ky] = F.log_softmax(fc_final[ky](x), dim=1)
         return x_out
 
     def _to_list(self, structured_x, out):
@@ -223,13 +223,14 @@ class inputPerturber(object):
             pert = np.random.uniform(0.0, 1.0, (npert, 1, 28, 28)).astype(np.float32)
             pert = mnist_data_transform(pert)
         elif inittype == 'randval':
-            valdata = load_from_cache('cache/mnist_val.pkl')['ip']
-            tmp = load_from_cache('cache/mnist_val_with_label.pkl')
+            valdata = load_from_cache('cache/mnist_val.pkl', python23_conversion=True)['ip']
+            tmp = load_from_cache('cache/mnist_val_with_label.pkl', python23_conversion=True)
             qlabel = tmp['label']
             if qseed == 0:
-                sampler = load_from_cache('cache/mnist_val_queries1000.pkl')[:npert]
+                sampler = load_from_cache('cache/mnist_val_queries1000.pkl', python23_conversion=True)[:npert]
             else:
-                sampler = load_from_cache('cache/mnist_val_queries10000_qseed.pkl')[qseed][:npert]
+                sampler = load_from_cache('cache/mnist_val_queries10000_qseed.pkl',
+                                          python23_conversion=True)[qseed][:npert]
             pert = valdata[sampler].astype(np.float32)
             qlabel = qlabel[sampler]
         else:
@@ -376,7 +377,8 @@ class blackBoxRevealer(inputPerturber):
         testsubset = self.co.control['data']['eval']
 
         if traindata == 'dnet10000':
-            data_cos = load_from_cache('cache/modelzoo-mnist/dnet10000_cos_pruned_ensembled.pkl')
+            data_cos = load_from_cache('cache/modelzoo-mnist/dnet10000_cos_pruned_ensembled.pkl',
+                                       python23_conversion=True)
         else:
             raise ValueError('Meta-training only supports dnet10000.')
 
@@ -498,7 +500,8 @@ class blackBoxRevealer(inputPerturber):
 
     def _prepare_queryoutput(self, phase='train', suffix=''):
         try:
-            self.query_output_fixed[phase] = load_from_cache(self.co.dirs['precomp_' + phase + suffix])
+            self.query_output_fixed[phase] = load_from_cache(self.co.dirs['precomp_' + phase + suffix],
+                                                             python23_conversion=True)
         except IOError:
             print("Precomputing query output..")
             if phase == 'train':

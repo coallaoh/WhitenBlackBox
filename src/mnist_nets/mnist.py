@@ -115,17 +115,17 @@ class mnet(nn.Module):
             poolfactor = 1
         conv_iter = []
         for n in range(self.control['net']['n_conv'] - 2):
-            conv_iter.append(convblock(20, 20, self.ks, padding=(self.ks - 1) / 2))
+            conv_iter.append(convblock(20, 20, self.ks, padding=int((self.ks - 1) / 2)))
         self.conv_iter = nn.Sequential(*conv_iter)
 
-        self.fcfeatdim = (
+        self.fcfeatdim = int((
                              (
                                  (
                                      (
-                                         (28 - self.ks + 1) / poolfactor
-                                     ) - self.ks + 1) / poolfactor
+                                         (28 - self.ks + 1) // poolfactor
+                                     ) - self.ks + 1) // poolfactor
                              ) ** 2
-                         ) * 20
+                         ) * 20)
 
         self.fc1 = nn.Linear(self.fcfeatdim, 50)
         fc_iter = []
@@ -268,26 +268,26 @@ def train(co):
             if batch_idx % co.conf['log_interval'] == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, batch_idx * len(data), len(train_loader.dataset),
-                           100. * batch_idx / len(train_loader), loss.data[0]))
+                           100. * batch_idx / len(train_loader), loss.data.item()))
 
     def test():
         model.eval()
-        test_loss = 0
-        correct = 0
+        test_loss = 0.0
+        correct = 0.0
         for data, target in test_loader:
             if co.conf['gpu'] is not None:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
             output = model(data)
-            test_loss += F.nll_loss(output, target, size_average=False).data[0]  # sum up batch loss
+            test_loss += F.nll_loss(output, target, size_average=False).data.item()  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+            correct += float(pred.eq(target.data.view_as(pred)).sum().item())
 
         acc = 100. * correct / len(test_loader.dataset)
         test_loss /= len(test_loader.dataset)
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
             test_loss, correct, len(test_loader.dataset),
-            100. * correct / len(test_loader.dataset)))
+            acc))
 
         return acc
 

@@ -45,11 +45,11 @@ The ICLR paper contains much more detailed experimental results on MNIST, includ
 
 ## Environment
 
-We only support python 2 for this project. Conda environment with [pytorch](http://pytorch.org/) (with cuda 8.0) has been used. Tested on pytorch version 0.4.1. 
+We support python versions `2.7` and `3.5` for this project. Conda environment with [pytorch](http://pytorch.org/) (with cuda`8.0` or `10.0`) has been used. Tested on pytorch versions `0.4.1` and `1.1.0`. 
 
 ## Installation
 
-Clone this repository recursively.
+**VERY IMPORTANT** Clone this repository recursively.
 
 ```bash
 $ git clone https://github.com/coallaoh/WhitenBlackBox.git --recursive
@@ -66,6 +66,13 @@ $ mkdir cache && wget https://datasets.d2.mpi-inf.mpg.de/joon18iclr/mnist_val.pk
 ## (Optional) Download the *MNIST-NET* dataset
 
 *MNIST-NET* is a dataset of 11,282 diverse MNIST digit classifiers. The full pipeline for generating *MNIST-NET* is included in the repository (see below). The generation has taken about 40 GPU days with NVIDIA Tesla K80. Alternatively, the dataset can be downloaded from [this link](https://datasets.d2.mpi-inf.mpg.de/joon18iclr/MNIST-NET.tar.gz) (19GB). Untar the downloaded file in the `cache/` folder. 
+
+Follow the steps below:
+```bash
+wget https://datasets.d2.mpi-inf.mpg.de/joon18iclr/MNIST-NET.tar.gz
+tar -xvzf MNIST-NET.tar.gz -C cache/
+
+```
 
 ## Running the code
 

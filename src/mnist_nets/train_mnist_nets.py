@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, 'src')
 
-from mnist import training as mnist_train
+from mnist_nets.mnist import training as mnist_train
 from util.construct_controls import apply_explist
 from util.exceptions import CacheFileExists
 
@@ -58,7 +58,7 @@ def load_conf_control_models(archset):
         subset=['all', 'half_0', 'half_1', 'quarter_0', 'quarter_1', 'quarter_2', 'quarter_3'],
         seed=range(1000),
     )
-    attr_list_keys = attr_list.keys()
+    attr_list_keys = list(attr_list.keys())
     attr_list_list = [attr_list[ky] for ky in attr_list_keys]
     import itertools, random
     all_comb = list(itertools.product(*attr_list_list))
